@@ -1,0 +1,209 @@
+<!-- Save as Adminlogin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login – Wi‑Fi Access</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #F7F7F7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .topnav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      background-color: #d7153a;
+      z-index: 100;
+      padding: 0 1rem;
+      height: 56px;
+    }
+
+    .topnav a {
+      color: #fff;
+      text-decoration: none;
+      padding: 0 16px;
+      font-size: 17px;
+      line-height: 56px;
+    }
+
+    .topnav a:hover,
+    .topnav a.active {
+      background-color: #fff;
+      color: #d7153a;
+    }
+
+    .topnav .icon {
+      display: none;
+      margin-left: auto;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 600px) {
+      .topnav.responsive {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+      }
+
+      .topnav.responsive .icon {
+        display: block;
+      }
+
+      .topnav.responsive a {
+        display: block;
+        width: 100%;
+        padding: 12px 16px;
+        line-height: normal;
+      }
+
+      .topnav a:not(.icon) {
+        display: none;
+      }
+
+      .topnav.responsive a {
+        display: block;
+      }
+    }
+
+    .login-container {
+      flex: 1;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-card {
+      background: #fff;
+      width: 100%;
+      box-shadow: 0 0 7px rgba(0,0,0,0.11);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .login-header {
+      background: #d7153a;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .content {
+      padding: 1.5rem;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      letter-spacing: 0.2rem;
+      border: 1px solid #eee;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1.1rem;
+      color: #d7153a;
+      border: 2px solid #d7153a;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #d7153a;
+      color: #fff;
+    }
+
+    .note {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #888;
+    }
+  </style>
+
+  <script>
+    function toggleNav() {
+      var nav = document.getElementById("myTopnav");
+      nav.classList.toggle("responsive");
+    }
+
+    function validateLogin() {
+      const username = document.getElementById("auth_user").value;
+      const password = document.getElementById("auth_pass").value;
+
+      console.log("Login attempt:", username, password); // Debug log
+
+      if (username === "Bethuel" && password === "123456788") {
+        console.log("Login successful!");
+        sessionStorage.setItem("admin_logged_in", "true");
+        // Redirect to dashboard - make sure admin_dashboard.html exists in the same folder!
+        window.location.href = "admin_dashboard.html";
+        return false; // prevent default form submission
+      } else {
+        const note = document.getElementById("login-note");
+        note.textContent = "Invalid username or password.";
+        note.style.color = "#d7153a";
+        console.log("Login failed.");
+        return false; // prevent form submission
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="topnav" id="myTopnav">
+    <a href="index.html">Guest Access</a>
+    <a href="Adminlogin.html" class="active">Admin Login</a>
+     <a href="data_offer.html" class="active">Data Offer</a>
+    <a class="icon" onclick="toggleNav()">
+      <i class="fa fa-bars"></i>
+    </a>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header"><h1>Admin Login</h1></div>
+      <div class="content">
+        <form onsubmit="return validateLogin()">
+          <label for="auth_user">Username</label>
+          <input id="auth_user" name="auth_user" type="text" placeholder="xyz" required autofocus />
+          
+          <label for="auth_pass">Password</label>
+          <input id="auth_pass" name="auth_pass" type="password" placeholder="********" required />
+          
+          <button type="submit">Login</button>
+        </form>
+        <div class="note" id="login-note">Please enter your admin credentials.</div>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    IMPORTANT:
+    To avoid redirect issues, serve your files via a local HTTP server instead of opening them directly.
+    For example, run in your project folder:
+    python -m http.server
+    Then access http://localhost:8000/Adminlogin.html in your browser.
+  -->
+</body>
+</html>

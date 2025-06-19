@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard – User Management & Data Offers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: #d7153a;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+    }
+    .logout-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #fff;
+      color: #d7153a;
+      border: 1px solid #fff;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .logout-btn:hover {
+      background: #d7153a;
+      color: white;
+      border: 1px solid white;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 0.8rem;
+      text-align: left;
+    }
+    .form-inline {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-inline input {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    button {
+      background: #d7153a;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #a6102b;
+    }
+    .delete-btn {
+      background: #888;
+    }
+    .delete-btn:hover {
+      background: #555;
+    }
+    /* Data entry styles */
+    .data-entry-form {
+      margin-top: 2rem;
+      background: #fafafa;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 0.25rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .entry-list {
+      margin-top: 2rem;
+    }
+    .entry {
+      background: #f1f1f1;
+      padding: 0.75rem;
+      border-radius: 5px;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .entry span {
+      flex-grow: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Admin Dashboard – User Management & Data Offers</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Users Section -->
+    <h2>Connected Users</h2>
+    <form class="form-inline" onsubmit="addUser(event)">
+      <input type="text" id="username" placeholder="Enter new user name" required />
+      <button type="submit">Add User</button>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+
+    <!-- Cart Requests Section -->
+    <h2>Pending Cart Requests</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Amount</th>
+          <th>Volume</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Access Code</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="requestTableBody"></tbody>
+    </table>
+
+    <!-- Data Entry Section -->
+    <div class="data-entry-form">
+      <h2>Enter Amount & Duration</h2>
+      <form id="dataForm">
+        <label for="amount">Amount</label>
+        <input type="number" id="amount" name="amount" min="0" step="any" required />
+
+        <label for="volume">Volume of Data</label>
+        <select id="volume" name="volume" required>
+          <option value="" disabled selected>Select volume</option>
+          <option value="Unlimited">Unlimited</option>
+          <option value="500MB">500MB</option>
+          <option value="1GB">1GB</option>
+          <option value="5GB">5GB</option>
+          <option value="10GB">10GB</option>
+        </select>
+
+        <label for="duration">Duration (hours)</label>
+        <select id="duration" name="duration" required>
+          <option value="" disabled selected>Select duration</option>
+          <option value="1">1 hour</option>
+          <option value="3">3 hours</option>
+          <option value="4">12 hours</option>
+          <option value="24">24 hours (1 day)</option>
+        </select>
+
+        <button type="submit">Add Entry</button>
+      </form>
+
+      <div class="entry-list" id="entryList">
+        <h3>Saved Offers</h3>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🔐 LOGIN CHECK
+    if (sessionStorage.getItem("admin_logged_in") !== "true") {
+      alert("Access denied. Please log in as admin.");
+      window.location.href = "Adminlogin.html";
+    }
+
+    function logout() {
+      sessionStorage.removeItem("admin_logged_in");
+      window.location.href = "Adminlogin.html";
+    }
+
+    // 👤 USER MANAGEMENT
+    let users = JSON.parse(localStorage.getItem('connectedUsers')) || ['Alice', 'Bob', 'Charlie'];
+
+    function renderUsers() {
+      const table = document.getElementById('userTableBody');
+      table.innerHTML = '';
+      users.forEach((user, index) => {
+        const row = `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${user}</td>
+            <td><button class="delete-btn" onclick="deleteUser(${index})">Delete</button></td>
+          </tr>
+        `;
+        table.innerHTML += row;
+      });
+      localStorage.setItem('connectedUsers', JSON.stringify(users));
+    }
+
+    function addUser(event) {
+      event.preventDefault();
+      const input = document.getElementById('username');
+      const username = input.value.trim();
+      if (username) {
+        users.push(username);
+        input.value = '';
+        renderUsers();
+      }
+    }
+
+    function deleteUser(index) {
+      if (confirm(`Are you sure you want to delete "${users[index]}"?`)) {
+        users.splice(index, 1);
+        renderUsers();
+      }
+    }
+
+    // 🛒 CART REQUESTS
+    function renderRequests() {
+      const requestTable = document.getElementById('requestTableBody');
+      const requests = JSON.parse(localStorage.getItem('cartRequests')) || [];
+
+      requestTable.innerHTML = '';
+      requests.forEach((req, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${req.amount}</td>
+          <td>${req.volume}</td>
+          <td>${req.duration}</td>
+          <td>${req.status}</td>
+          <td>${req.accessCode || '-'}</td>
+          <td>${req.status === 'pending' ? `<button onclick="approveRequest(${req.id})">Approve</button>` : ''}</td>
+        `;
+        requestTable.appendChild(row);
+      });
+    }
+
+    function approveRequest(id) {
+      const requests = JSON.parse(localStorage.getItem('cartRequests')) || [];
+      const updated = requests.map(req => {
+        if (req.id === id) {
+          req.status = 'approved';
+          req.accessCode = generateAccessCode();
+        }
+        return req;
+      });
+      localStorage.setItem('cartRequests', JSON.stringify(updated));
+      renderRequests();
+    }
+
+    function generateAccessCode() {
+      return Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    // 📦 DATA ENTRY LOGIC
+    const form = document.getElementById('dataForm');
+    const entryList = document.getElementById('entryList');
+    const entriesKey = 'dataOffers';
+    let entries = JSON.parse(localStorage.getItem(entriesKey)) || [];
+
+    const renderEntries = () => {
+      entryList.innerHTML = '<h3>Saved Offers</h3>';
+      entries.forEach((entry, index) => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `
+          <span>₦${entry.amount} - ${entry.volume} - ${entry.duration}hr(s)</span>
+          <button class="delete-btn" onclick="deleteEntry(${index})">Delete</button>
+        `;
+        entryList.appendChild(div);
+      });
+      if (entries.length === 0) {
+        entryList.innerHTML += '<p>No entries yet.</p>';
+      }
+    };
+
+    function deleteEntry(index) {
+      if (confirm('Are you sure you want to delete this offer?')) {
+        entries.splice(index, 1);
+        localStorage.setItem(entriesKey, JSON.stringify(entries));
+        renderEntries();
+      }
+    }
+    window.deleteEntry = deleteEntry;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const amount = parseFloat(form.amount.value);
+      const volume = form.volume.value;
+      const duration = parseInt(form.duration.value, 10);
+
+      if (isNaN(amount) || !volume || isNaN(duration)) {
+        alert("Please fill all fields correctly.");
+        return;
+      }
+
+      entries.push({ amount, volume, duration });
+      localStorage.setItem(entriesKey, JSON.stringify(entries));
+      form.reset();
+      renderEntries();
+    });
+
+    // 🚀 Initial Load
+    renderUsers();
+    renderRequests();
+    renderEntries();
+  </script>
+
+</body>
+</html>

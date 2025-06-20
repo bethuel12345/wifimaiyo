@@ -122,19 +122,42 @@
   </style>
   <script>
     function toggleNav() {
-      var x = document.getElementById("myTopnav");
+      const x = document.getElementById("myTopnav");
       x.className = x.className === "topnav" ? "topnav responsive" : "topnav";
     }
 
     function validateAccessCode(event) {
-      event.preventDefault(); // prevent form from submitting
+      event.preventDefault();
 
-      const input = document.getElementById("auth_pass").value;
+      const enteredCode = document.getElementById("auth_pass").value.trim().toUpperCase();
       const errorBox = document.getElementById("error-message");
 
-      if (input === "12345677") {
-        // redirect to a success page or portal
-        window.location.href = "https://your-portal/redirect";
+      const requests = JSON.parse(localStorage.getItem('cartRequests')) || [];
+
+      const match = requests.find(r =>
+        r.status === 'approved' &&
+        r.accessCode &&
+        r.accessCode.toUpperCase() === enteredCode
+      );
+
+      if (match) {
+        const startTime = Date.now();
+        const durationMs = parseInt(match.duration) * 60 * 60 * 1000; // hours → ms
+
+        const activeSessions = JSON.parse(localStorage.getItem('wifiSessions')) || [];
+
+        const alreadyActive = activeSessions.find(s => s.accessCode === enteredCode);
+        if (!alreadyActive) {
+          activeSessions.push({
+            accessCode: enteredCode,
+            startTime,
+            durationMs
+          });
+          localStorage.setItem('wifiSessions', JSON.stringify(activeSessions));
+        }
+
+        // Redirect to session-controlled access page
+        window.location.href = "wifi_access.html?code=" + enteredCode;
       } else {
         errorBox.textContent = "Invalid access code. Please try again.";
         errorBox.style.display = "block";
@@ -146,7 +169,7 @@
   <div class="topnav" id="myTopnav">
     <a href="index.html" class="active">Guest Access</a>
     <a href="Adminlogin.html">Admin Login</a>
-    <a href="data_offer.html" class="active">Data Offer</a>
+    <a href="data_offer.html">Data Offer</a>
     <a href="javascript:void(0);" class="icon" onclick="toggleNav()">
       <i class="fa fa-bars"></i>
     </a>
@@ -161,7 +184,7 @@
         <button type="submit" name="accept">Continue</button>
         <div class="error" id="error-message"></div>
       </form>
-      <div class="note">Enter the access code provided.</div>
+      <div class="note">Enter the access code provided by the admin.</div>
     </div>
   </div>
 </body>

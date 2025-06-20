@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wi‑Fi Access</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+      background-size: cover;
+      text-align: center;
+      padding-top: 50px;
+      margin: 0;
+      height: 100vh;
+      color: white;
+      text-shadow: 0 0 5px rgba(0,0,0,0.7);
+    }
+    h1 {
+      color: #d7153a;
+      text-shadow: 0 0 8px rgba(0,0,0,0.9);
+    }
+    .timer {
+      font-size: 1.5rem;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .end {
+      color: #ff4c4c;
+      font-weight: bold;
+      text-shadow: none;
+    }
+    button.exit-btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #d7153a;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      transition: background-color 0.3s ease;
+    }
+    button.exit-btn:hover {
+      background-color: #a10f27;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Bethuel's Wi‑Fi</h1>
+  <div class="timer" id="timer">Validating session...</div>
+
+  <button class="exit-btn" onclick="goBack()">Exit</button>
+
+  <script>
+    const timerEl = document.getElementById('timer');
+    const sessions = JSON.parse(localStorage.getItem('wifiSessions')) || [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessCodeParam = urlParams.get('code');
+
+    let session = null;
+
+    if (accessCodeParam) {
+      session = sessions.find(s => s.accessCode === accessCodeParam.toUpperCase());
+    } else {
+      session = sessions[sessions.length - 1];
+    }
+
+    if (!session) {
+      timerEl.innerHTML = '<span class="end">No valid session found.</span>';
+      setTimeout(() => window.location.href = 'index.html', 3000);
+    } else {
+      const endTime = session.startTime + session.durationMs;
+
+      const interval = setInterval(() => {
+        const remaining = endTime - Date.now();
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+          timerEl.innerHTML = '<span class="end">Session expired. Disconnecting...</span>';
+
+          const updatedSessions = sessions.filter(s => s.accessCode !== session.accessCode);
+          localStorage.setItem('wifiSessions', JSON.stringify(updatedSessions));
+
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 3000);
+        } else {
+          const hours = Math.floor(remaining / (1000 * 60 * 60));
+          const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+          timerEl.textContent = `Time remaining: ${hours}h ${minutes}m ${seconds}s`;
+        }
+      }, 1000);
+    }
+
+    function goBack() {
+      window.location.href = 'index.html'; // Redirect back to guest access page
+    }
+  </script>
+</body>
+</html>
